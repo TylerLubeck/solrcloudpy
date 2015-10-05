@@ -8,6 +8,9 @@ from .schema import SolrSchema
 import time
 import json
 import requests
+import logging
+
+logger = logging.getLogger(__name__)
 
 class SolrCollectionAdmin(CollectionBase):
     """
@@ -17,7 +20,7 @@ class SolrCollectionAdmin(CollectionBase):
         super(SolrCollectionAdmin,self).__init__(connection,name)
         self.index_stats = SolrIndexStats(self.connection,self.name)
         self.schema = SolrSchema(self.connection,self.name)
-        
+
     def exists(self):
         """
         Finds if a collection exists in the cluster
@@ -85,7 +88,7 @@ class SolrCollectionAdmin(CollectionBase):
                 # Create the index and wait until it's available
                 while True:
                     if not self._is_index_created():
-                        print "index not created yet, waiting..."
+                        logger.debug("Index not created yet, waiting...")
                         time.sleep(1)
                     else: break
 

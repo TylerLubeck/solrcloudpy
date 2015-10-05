@@ -4,7 +4,7 @@ Utilities to index large volumes of documents in Solr
 from contextlib import contextmanager
 import logging
 
-log = logging.getLogger('solrcloud')
+logger = logging.getLogger(__name__)
 
 class SolrBatchAdder(object):
     def __init__(self, solr, batch_size=100, auto_commit=True):
@@ -59,21 +59,20 @@ class SolrBatchAdder(object):
         """
         batch_len = len(self.batch)
         auto_commit = self.auto_commit
-        log.debug("SolrBatchAdder: flushing {batch_len} articles to Solr (auto_commit={auto_commit})".format(
-            batch_len=batch_len, auto_commit=auto_commit))
+        logger.debug('SolrBatchAdder: flushing %s articles to Solr '
+                     '(auto_commit=%s)', batch_len, auto_commit)
         try:
             self.solr.add(self.batch)
         except Exception as e:
-            log.exception("Exception encountered when committing batch, falling back on one-by-one commit")
-            print "Exception encountered when committing batch, falling back on one-by-one commit"
-            print e
+            logger.exception('Exception encountered when commiting batch, '
+                             'falling back to one-by-one commit. e=%s', e)
             # one by one fall-back
             for item in self.batch:
                 try:
                     self.solr.add([item])
                 except Exception as e:
-                    log.error(u"Could not add item to solr index")
-                    log.exception(str(e))
+                    logger.exception('Could not add item to Solr index. '
+                                     'e=%s', e)
             if auto_commit:
                 self.commit()
 
@@ -85,7 +84,8 @@ class SolrBatchAdder(object):
         try:
             self.solr.commit()
         except :
-            log.warning("SolrBatchAdder timed out when committing, but   it's safe to ignore")
+            logger.warning('SolrBatchAdder timed out when committing, '
+                           'but this is safe to ignore.')
 
     def _append_commit(self, doc):
         if self.batch_len == self.batch_size:
@@ -116,5 +116,5 @@ def solr_batch_adder(solr, batch_size=2000, auto_commit=False):
     try:
         yield batcher
     finally:
-        log.info("solr_batch_adder: flushing last few items in batch")
+        logger.info("solr_batch_adder: flushing last few items in batch")
         batcher.flush()
